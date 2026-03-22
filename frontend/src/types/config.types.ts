@@ -14,12 +14,14 @@ export interface ModelInfo {
 }
 
 export interface OllamaStatus {
-  status: string;
+  status?: string;
   connected: boolean;
   models?: string[];
   defaultModel?: string;
   defaultModelAvailable?: boolean;
   message?: string;
+  error?: string;
+  responseTime?: number;
 }
 
 export interface HealthStatus {

@@ -241,17 +241,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [settings]);
 
   /**
-   * Check backend and Ollama health
+   * Check backend and current provider health
    */
   const checkHealth = useCallback(async () => {
     try {
-      const health = await apiService.checkHealth();
-      setHealthStatus(health);
+      // Build provider config for health check
+      const providerConfig: any = {
+        provider: settings.provider
+      };
+
+      if (settings.provider === 'ollama') {
+        providerConfig.url = settings.ollamaUrl;
+      } else if (settings.provider === 'lmstudio') {
+        providerConfig.url = settings.lmstudioUrl;
+      } else if (settings.provider === 'openrouter') {
+        providerConfig.apiKey = settings.openrouterApiKey;
+      } else if (settings.provider === 'sarvam') {
+        providerConfig.apiKey = settings.sarvamApiKey;
+      }
+
+      // Call health check with provider config
+      const response = await fetch('http://localhost:3001/api/health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerConfig })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setHealthStatus({
+          backend: 'operational',
+          ollama: {
+            connected: data.data.connected,
+            error: data.data.error
+          },
+          timestamp: data.data.timestamp
+        });
+      } else {
+        setHealthStatus(null);
+      }
     } catch (err) {
       console.error('Health check failed:', err);
       setHealthStatus(null);
     }
-  }, []);
+  }, [settings]);
 
   /**
    * Load available models

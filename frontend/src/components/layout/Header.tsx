@@ -8,11 +8,20 @@ import { useApp } from '../../context/AppContext';
 import { useTheme } from '../../context/ThemeContext';
 import './Header.css';
 
+const PROVIDER_NAMES: Record<string, string> = {
+  ollama: 'OLLAMA',
+  lmstudio: 'LM STUDIO',
+  openrouter: 'OPENROUTER',
+  sarvam: 'SARVAM AI'
+};
+
 export const Header: React.FC = () => {
   const { healthStatus, settings } = useApp();
   const { theme, toggleTheme } = useTheme();
   
   const isConnected = healthStatus?.ollama?.connected || false;
+  const providerName = PROVIDER_NAMES[settings.provider] || settings.provider.toUpperCase();
+  
   const currentTime = new Date().toLocaleTimeString('en-US', { 
     hour: '2-digit', 
     minute: '2-digit',
@@ -30,13 +39,14 @@ export const Header: React.FC = () => {
           className="header-theme-toggle" 
           onClick={toggleTheme}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label="Toggle theme"
         >
           {theme === 'dark' ? '☀' : '🌙'}
         </button>
         <div className="header-status">
           <span className={`status-dot ${isConnected ? 'status-connected' : 'status-disconnected'}`}></span>
           <span className="status-text">
-            {isConnected ? 'OLLAMA CONNECTED' : 'OLLAMA DISCONNECTED'}
+            {providerName} {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
           </span>
         </div>
         <div className="header-model">{settings.defaultModel}</div>
