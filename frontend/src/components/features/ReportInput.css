@@ -69,6 +69,62 @@
   font-size: var(--text-xs);
 }
 
+/* Example Reports */
+.report-examples {
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border);
+}
+
+.report-examples-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.report-examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.example-card {
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.example-card:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent-gold);
+}
+
+.example-card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.example-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--accent-gold);
+  margin-bottom: var(--space-2);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.example-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .report-input-error {
   background: var(--danger);
   border: var(--border-width) solid var(--danger);

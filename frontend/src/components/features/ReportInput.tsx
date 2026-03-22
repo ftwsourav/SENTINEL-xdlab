@@ -285,6 +285,45 @@ export const ReportInput: React.FC = () => {
       </div>
 
       {isLoading && <LoadingOverlay />}
+
+      {/* Example Reports for Quick Testing */}
+      <div className="report-examples">
+        <h3 className="report-examples-title">EXAMPLE REPORTS FOR TESTING</h3>
+        <div className="report-examples-grid">
+          <button
+            className="example-card"
+            onClick={() => setReport('Routine patrol along sector 7-Alpha. Observed increased vehicle movement near checkpoint Charlie. Three unidentified trucks passed through at 0300 hours. Local informant reports unusual activity in nearby village. Recommend increased surveillance.')}
+            disabled={isLoading}
+          >
+            <div className="example-title">Border Patrol</div>
+            <div className="example-desc">Vehicle movement observation</div>
+          </button>
+          <button
+            className="example-card"
+            onClick={() => setReport('Explosion reported at 1430 hours near fuel depot. Two casualties confirmed. Blast radius approximately 50 meters. Evidence suggests improvised explosive device. Area secured, investigation ongoing. Immediate medical evacuation completed.')}
+            disabled={isLoading}
+          >
+            <div className="example-title">Incident Report</div>
+            <div className="example-desc">Explosion at fuel depot</div>
+          </button>
+          <button
+            className="example-card"
+            onClick={() => setReport('Source BRAVO-3 reports suspicious communications intercepted. Possible coordination between hostile elements. Mentions of weapons cache in grid reference 42N 567890. Source reliability: moderate. Recommend verification through additional channels.')}
+            disabled={isLoading}
+          >
+            <div className="example-title">Intelligence</div>
+            <div className="example-desc">Intercepted communications</div>
+          </button>
+          <button
+            className="example-card"
+            onClick={() => setReport('Standard checkpoint operations. No unusual activity observed. Traffic flow normal. Local population cooperative. Weather conditions clear. All equipment operational. No incidents to report.')}
+            disabled={isLoading}
+          >
+            <div className="example-title">Routine Report</div>
+            <div className="example-desc">Standard operations</div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
