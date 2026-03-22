@@ -67,8 +67,10 @@ class ProviderService {
           prompt,
           stream: false,
           options: {
-            temperature: providerConfig.temperature || 0.3,
-            num_predict: providerConfig.maxTokens || 1024
+            temperature: 0.1, // Lower temperature for more consistent JSON
+            num_predict: providerConfig.maxTokens || 1024,
+            top_p: 0.9,
+            top_k: 40
           }
         }),
         signal: controller.signal
@@ -81,6 +83,11 @@ class ProviderService {
       }
 
       const data = await response.json();
+      
+      if (!data.response) {
+        throw new Error('No response from Ollama');
+      }
+
       return data.response;
 
     } catch (error) {
@@ -107,10 +114,9 @@ class ProviderService {
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: 'You are SENTINEL, a tactical intelligence analyst.' },
             { role: 'user', content: prompt }
           ],
-          temperature: providerConfig.temperature || 0.3,
+          temperature: 0.1, // Lower temperature for consistent JSON
           max_tokens: providerConfig.maxTokens || 1024
         }),
         signal: controller.signal
@@ -160,10 +166,9 @@ class ProviderService {
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: 'You are SENTINEL, a tactical intelligence analyst.' },
             { role: 'user', content: prompt }
           ],
-          temperature: providerConfig.temperature || 0.3,
+          temperature: providerConfig.temperature || 0.1,
           max_tokens: providerConfig.maxTokens || 1024
         }),
         signal: controller.signal
@@ -190,7 +195,7 @@ class ProviderService {
    */
   async callSarvam(report, providerConfig, metadata) {
     const baseUrl = 'https://api.sarvam.ai';
-    const model = providerConfig.model || 'sarvam-1';
+    const model = providerConfig.model || 'sarvam-2b';
     const apiKey = providerConfig.apiKey;
 
     if (!apiKey) {
@@ -212,10 +217,9 @@ class ProviderService {
         body: JSON.stringify({
           model,
           messages: [
-            { role: 'system', content: 'You are SENTINEL, a tactical intelligence analyst.' },
             { role: 'user', content: prompt }
           ],
-          temperature: providerConfig.temperature || 0.3,
+          temperature: providerConfig.temperature || 0.1,
           max_tokens: providerConfig.maxTokens || 1024
         }),
         signal: controller.signal
@@ -266,21 +270,26 @@ class ProviderService {
     
     try {
       const controller = new AbortController();
-      setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+      const startTime = Date.now();
       const response = await fetch(`${baseUrl}/api/tags`, {
         method: 'GET',
         signal: controller.signal
       });
+      const responseTime = Date.now() - startTime;
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        return { connected: false, error: `HTTP ${response.status}` };
+        return { connected: false, error: `HTTP ${response.status}`, responseTime };
       }
 
       const data = await response.json();
       return {
         connected: true,
-        models: data.models?.map(m => m.name) || []
+        models: data.models?.map(m => m.name) || [],
+        responseTime
       };
     } catch (error) {
       return { connected: false, error: error.message };
@@ -292,21 +301,26 @@ class ProviderService {
     
     try {
       const controller = new AbortController();
-      setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+      const startTime = Date.now();
       const response = await fetch(`${baseUrl}/v1/models`, {
         method: 'GET',
         signal: controller.signal
       });
+      const responseTime = Date.now() - startTime;
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        return { connected: false, error: `HTTP ${response.status}` };
+        return { connected: false, error: `HTTP ${response.status}`, responseTime };
       }
 
       const data = await response.json();
       return {
         connected: true,
-        models: data.data?.map(m => m.id) || []
+        models: data.data?.map(m => m.id) || [],
+        responseTime
       };
     } catch (error) {
       return { connected: false, error: error.message };
@@ -322,22 +336,31 @@ class ProviderService {
 
     try {
       const controller = new AbortController();
-      setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+      const startTime = Date.now();
       const response = await fetch('https://openrouter.ai/api/v1/models', {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${apiKey}` },
         signal: controller.signal
       });
+      const responseTime = Date.now() - startTime;
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        return { connected: false, error: `HTTP ${response.status}` };
+        return { connected: false, error: `HTTP ${response.status}`, responseTime };
       }
 
-      const data = await response.json();
+      // Return hardcoded popular models for OpenRouter
       return {
         connected: true,
-        models: data.data?.map(m => m.id) || []
+        models: [
+          'mistralai/mistral-7b-instruct',
+          'meta-llama/llama-3-8b-instruct',
+          'google/gemma-7b-it'
+        ],
+        responseTime
       };
     } catch (error) {
       return { connected: false, error: error.message };
@@ -351,10 +374,12 @@ class ProviderService {
       return { connected: false, error: 'API key required' };
     }
 
-    // Sarvam doesn't have a models endpoint, just verify API key format
+    // Sarvam doesn't have a public models endpoint
+    // Return hardcoded models
     return {
       connected: true,
-      models: ['sarvam-1', 'sarvam-2']
+      models: ['sarvam-2b', 'sarvam-m'],
+      responseTime: 0
     };
   }
 
@@ -362,6 +387,22 @@ class ProviderService {
    * List models for provider
    */
   async listModels(providerConfig) {
+    const provider = providerConfig.provider || 'ollama';
+
+    // For cloud providers, return hardcoded models
+    if (provider === 'openrouter') {
+      return [
+        'mistralai/mistral-7b-instruct',
+        'meta-llama/llama-3-8b-instruct',
+        'google/gemma-7b-it'
+      ];
+    }
+
+    if (provider === 'sarvam') {
+      return ['sarvam-2b', 'sarvam-m'];
+    }
+
+    // For local providers, fetch from API
     const status = await this.checkConnection(providerConfig);
     return status.models || [];
   }

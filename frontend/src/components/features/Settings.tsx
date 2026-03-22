@@ -6,14 +6,29 @@ import { ConfirmModal } from '../common/Modal';
 import { toast } from '../common/Toast';
 import exportService from '../../services/export.service';
 import dbService from '../../services/db.service';
+import apiService from '../../services/api.service';
 import './Settings.css';
+
+const PROVIDER_OPTIONS = [
+  { id: 'ollama', name: 'OLLAMA', subtitle: 'Local · Offline' },
+  { id: 'lmstudio', name: 'LM STUDIO', subtitle: 'Local · OpenAI' },
+  { id: 'openrouter', name: 'OPENROUTER', subtitle: 'Cloud · Free' },
+  { id: 'sarvam', name: 'SARVAM AI', subtitle: 'Cloud · Indian' }
+];
+
+const HARDCODED_MODELS = {
+  openrouter: [
+    'mistralai/mistral-7b-instruct',
+    'meta-llama/llama-3-8b-instruct',
+    'google/gemma-7b-it'
+  ],
+  sarvam: ['sarvam-2b', 'sarvam-m']
+};
 
 export const Settings: React.FC = () => {
   const { 
     settings, 
     updateSettings, 
-    availableModels, 
-    loadModels, 
     checkHealth,
     healthStatus,
     clearAllReports,
@@ -27,6 +42,10 @@ export const Settings: React.FC = () => {
   const [sarvamApiKey, setSarvamApiKey] = useState(settings.sarvamApiKey);
   const [selectedModel, setSelectedModel] = useState(settings.defaultModel);
   const [temperature, setTemperature] = useState(settings.temperature);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionResult, setConnectionResult] = useState<{ success: boolean; message: string; time?: number } | null>(null);
   const [showClearModal, setShowClearModal] = useState(false);
 
   useEffect(() => {
@@ -39,6 +58,117 @@ export const Settings: React.FC = () => {
     setTemperature(settings.temperature);
   }, [settings]);
 
+  // Auto-fetch models when provider changes
+  useEffect(() => {
+    handleProviderChange();
+  }, [provider]);
+
+  const handleProviderChange = async () => {
+    setConnectionResult(null);
+    
+    // For cloud providers, use hardcoded models
+    if (provider === 'openrouter') {
+      setAvailableModels(HARDCODED_MODELS.openrouter);
+      setSelectedModel(HARDCODED_MODELS.openrouter[0]);
+      return;
+    }
+
+    if (provider === 'sarvam') {
+      setAvailableModels(HARDCODED_MODELS.sarvam);
+      setSelectedModel(HARDCODED_MODELS.sarvam[0]);
+      return;
+    }
+
+    // For local providers, try to fetch models
+    if (provider === 'ollama' || provider === 'lmstudio') {
+      await fetchModels();
+    }
+  };
+
+  const fetchModels = async () => {
+    setIsFetchingModels(true);
+    setAvailableModels([]);
+    
+    try {
+      const providerConfig = {
+        provider,
+        url: provider === 'ollama' ? ollamaUrl : lmstudioUrl
+      };
+
+      const response = await fetch(`http://localhost:3001/api/models?provider=${provider}&url=${providerConfig.url}`);
+      const data = await response.json();
+
+      if (data.success && data.data.models && data.data.models.length > 0) {
+        setAvailableModels(data.data.models);
+        if (!data.data.models.includes(selectedModel)) {
+          setSelectedModel(data.data.models[0]);
+        }
+        toast.success(`Found ${data.data.models.length} models`);
+      } else {
+        toast.warning('No models found');
+        setAvailableModels([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
+      toast.error('Failed to fetch models');
+      setAvailableModels([]);
+    } finally {
+      setIsFetchingModels(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsTestingConnection(true);
+    setConnectionResult(null);
+
+    try {
+      const providerConfig: any = { provider };
+
+      if (provider === 'ollama') {
+        providerConfig.url = ollamaUrl;
+      } else if (provider === 'lmstudio') {
+        providerConfig.url = lmstudioUrl;
+      } else if (provider === 'openrouter') {
+        providerConfig.apiKey = openrouterApiKey;
+      } else if (provider === 'sarvam') {
+        providerConfig.apiKey = sarvamApiKey;
+      }
+
+      const startTime = Date.now();
+      const response = await fetch('http://localhost:3001/api/health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerConfig })
+      });
+      const responseTime = Date.now() - startTime;
+
+      const data = await response.json();
+
+      if (data.success && data.data.connected) {
+        setConnectionResult({
+          success: true,
+          message: 'CONNECTED',
+          time: responseTime
+        });
+        toast.success('Connection successful');
+      } else {
+        setConnectionResult({
+          success: false,
+          message: data.data.error || 'Connection failed'
+        });
+        toast.error('Connection failed');
+      }
+    } catch (error) {
+      setConnectionResult({
+        success: false,
+        message: 'Connection refused'
+      });
+      toast.error('Connection failed');
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
   const handleSave = async () => {
     await updateSettings({
       provider,
@@ -50,17 +180,6 @@ export const Settings: React.FC = () => {
       temperature
     });
     toast.success('Settings saved successfully');
-  };
-
-  const handleTestConnection = async () => {
-    toast.info('Testing connection...');
-    await checkHealth();
-    await loadModels();
-    if (healthStatus?.ollama?.connected) {
-      toast.success('Connection successful');
-    } else {
-      toast.error('Connection failed');
-    }
   };
 
   const handleClearData = () => {
@@ -82,7 +201,8 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const isConnected = healthStatus?.ollama?.connected || false;
+  const needsApiKey = provider === 'openrouter' || provider === 'sarvam';
+  const needsUrl = provider === 'ollama' || provider === 'lmstudio';
 
   return (
     <div className="settings">
@@ -90,118 +210,141 @@ export const Settings: React.FC = () => {
 
       <Card title="AI PROVIDER CONFIGURATION">
         <div className="settings-form">
+          {/* Provider Selection Cards */}
           <div className="form-group">
-            <label className="form-label">AI PROVIDER</label>
-            <select
-              className="form-select"
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as any)}
-            >
-              <option value="ollama">Ollama (Local)</option>
-              <option value="lmstudio">LM Studio (Local)</option>
-              <option value="openrouter">OpenRouter (Cloud)</option>
-              <option value="sarvam">Sarvam AI (Cloud)</option>
-            </select>
+            <label className="form-label">SELECT AI PROVIDER</label>
+            <div className="provider-cards">
+              {PROVIDER_OPTIONS.map(option => (
+                <button
+                  key={option.id}
+                  className={`provider-card ${provider === option.id ? 'provider-card-selected' : ''}`}
+                  onClick={() => setProvider(option.id as any)}
+                >
+                  <div className="provider-card-radio">
+                    {provider === option.id ? '◉' : '○'}
+                  </div>
+                  <div className="provider-card-content">
+                    <div className="provider-card-name">{option.name}</div>
+                    <div className="provider-card-subtitle">{option.subtitle}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
             <div className="form-hint">
-              Local providers are recommended for air-gapped deployments
+              Local providers recommended for air-gapped deployments
             </div>
           </div>
 
-          {provider === 'ollama' && (
-            <>
-              <div className="form-group">
-                <label className="form-label">CONNECTION STATUS</label>
-                <div className="connection-status">
-                  <span className={`status-indicator ${isConnected ? 'status-connected' : 'status-disconnected'}`}>
-                    {isConnected ? '● CONNECTED' : '● DISCONNECTED'}
-                  </span>
-                  <Button variant="secondary" size="small" onClick={handleTestConnection}>
-                    TEST CONNECTION
-                  </Button>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">OLLAMA URL</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={ollamaUrl}
-                  onChange={(e) => setOllamaUrl(e.target.value)}
-                  placeholder="http://localhost:11434"
-                />
-              </div>
-            </>
-          )}
-
-          {provider === 'lmstudio' && (
+          {/* Context-sensitive fields */}
+          {needsUrl && (
             <div className="form-group">
-              <label className="form-label">LM STUDIO URL</label>
+              <label className="form-label">
+                {provider === 'ollama' ? 'OLLAMA URL' : 'LM STUDIO URL'}
+              </label>
               <input
                 type="text"
                 className="form-input"
-                value={lmstudioUrl}
-                onChange={(e) => setLmstudioUrl(e.target.value)}
-                placeholder="http://localhost:1234"
+                value={provider === 'ollama' ? ollamaUrl : lmstudioUrl}
+                onChange={(e) => provider === 'ollama' ? setOllamaUrl(e.target.value) : setLmstudioUrl(e.target.value)}
+                placeholder={provider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234'}
               />
-              <div className="form-hint">
-                Ensure LM Studio server is running
-              </div>
             </div>
           )}
 
-          {provider === 'openrouter' && (
+          {needsApiKey && (
             <div className="form-group">
-              <label className="form-label">OPENROUTER API KEY</label>
+              <label className="form-label">
+                {provider === 'openrouter' ? 'OPENROUTER API KEY' : 'SARVAM AI API KEY'}
+              </label>
               <input
                 type="password"
                 className="form-input"
-                value={openrouterApiKey}
-                onChange={(e) => setOpenrouterApiKey(e.target.value)}
-                placeholder="sk-or-..."
+                value={provider === 'openrouter' ? openrouterApiKey : sarvamApiKey}
+                onChange={(e) => provider === 'openrouter' ? setOpenrouterApiKey(e.target.value) : setSarvamApiKey(e.target.value)}
+                placeholder={provider === 'openrouter' ? 'sk-or-...' : 'sarvam-...'}
               />
               <div className="form-hint">
-                Get your API key from openrouter.ai
+                Get your API key from {provider === 'openrouter' ? 'openrouter.ai' : 'sarvam.ai'}
               </div>
             </div>
           )}
 
-          {provider === 'sarvam' && (
-            <div className="form-group">
-              <label className="form-label">SARVAM AI API KEY</label>
-              <input
-                type="password"
-                className="form-input"
-                value={sarvamApiKey}
-                onChange={(e) => setSarvamApiKey(e.target.value)}
-                placeholder="sarvam-..."
-              />
-              <div className="form-hint">
-                Get your API key from sarvam.ai
-              </div>
-            </div>
-          )}
-
+          {/* Connection Test */}
           <div className="form-group">
-            <label className="form-label">ACTIVE MODEL</label>
-            <select
-              className="form-select"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-            >
-              {availableModels.length > 0 ? (
-                availableModels.map(model => (
-                  <option key={model} value={model}>{model}</option>
-                ))
-              ) : (
-                <option value={selectedModel}>{selectedModel}</option>
+            <label className="form-label">CONNECTION STATUS</label>
+            <div className="connection-test">
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={handleTestConnection}
+                loading={isTestingConnection}
+                disabled={isTestingConnection}
+              >
+                {isTestingConnection ? 'TESTING...' : 'TEST CONNECTION'}
+              </Button>
+              {connectionResult && (
+                <div className={`connection-result ${connectionResult.success ? 'connection-success' : 'connection-error'}`}>
+                  {connectionResult.success ? '✓' : '✗'} {connectionResult.message}
+                  {connectionResult.time && ` — ${connectionResult.time}ms`}
+                </div>
               )}
-            </select>
-            <div className="form-hint">
-              {availableModels.length} models available
             </div>
           </div>
 
+          {/* Model Selection */}
+          {needsUrl && (
+            <div className="form-group">
+              <div className="form-label-row">
+                <label className="form-label">AVAILABLE MODELS</label>
+                <Button
+                  variant="ghost"
+                  size="small"
+                  onClick={fetchModels}
+                  loading={isFetchingModels}
+                  disabled={isFetchingModels}
+                >
+                  {isFetchingModels ? 'SCANNING...' : 'FETCH MODELS'}
+                </Button>
+              </div>
+              <select
+                className="form-select"
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={availableModels.length === 0}
+              >
+                {availableModels.length > 0 ? (
+                  availableModels.map(model => (
+                    <option key={model} value={model}>{model}</option>
+                  ))
+                ) : (
+                  <option value={selectedModel}>{selectedModel}</option>
+                )}
+              </select>
+              <div className="form-hint">
+                {availableModels.length > 0 ? `${availableModels.length} models available` : 'Click FETCH MODELS to scan'}
+              </div>
+            </div>
+          )}
+
+          {needsApiKey && (
+            <div className="form-group">
+              <label className="form-label">ACTIVE MODEL</label>
+              <select
+                className="form-select"
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+              >
+                {availableModels.map(model => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
+              <div className="form-hint">
+                {availableModels.length} models available
+              </div>
+            </div>
+          )}
+
+          {/* Temperature */}
           <div className="form-group">
             <label className="form-label">TEMPERATURE: {temperature.toFixed(1)}</label>
             <input
@@ -214,7 +357,7 @@ export const Settings: React.FC = () => {
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
             />
             <div className="form-hint">
-              Lower = more focused, Higher = more creative
+              Lower = more focused and consistent (recommended: 0.1-0.3)
             </div>
           </div>
 
