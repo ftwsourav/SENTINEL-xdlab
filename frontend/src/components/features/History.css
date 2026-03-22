@@ -94,6 +94,24 @@
   gap: var(--space-3);
 }
 
+.history-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.history-selected {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.history-empty-hint {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+
 .history-card-timestamp {
   font-size: var(--text-sm);
   color: var(--text-muted);

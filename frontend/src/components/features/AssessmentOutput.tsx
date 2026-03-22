@@ -3,6 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { Card } from '../common/Card';
+import { toast } from '../common/Toast';
+import exportService from '../../services/export.service';
 import './AssessmentOutput.css';
 
 export const AssessmentOutput: React.FC = () => {
@@ -22,18 +24,22 @@ export const AssessmentOutput: React.FC = () => {
   };
 
   const handleExportJSON = () => {
-    const dataStr = JSON.stringify(currentReport, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `sentinel-report-${currentReport.id}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    try {
+      exportService.exportJSON(currentReport);
+      toast.success('Report exported as JSON');
+    } catch (error) {
+      toast.error('Failed to export JSON');
+    }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = async () => {
+    try {
+      toast.info('Generating PDF...');
+      await exportService.exportPDF(currentReport);
+      toast.success('Report exported as PDF');
+    } catch (error) {
+      toast.error('Failed to export PDF');
+    }
   };
 
   return (
@@ -165,7 +171,7 @@ export const AssessmentOutput: React.FC = () => {
         <Button variant="primary" onClick={handleExportJSON}>
           EXPORT JSON
         </Button>
-        <Button variant="secondary" onClick={handlePrint}>
+        <Button variant="secondary" onClick={handleExportPDF}>
           EXPORT PDF
         </Button>
         <Button variant="secondary" onClick={handleNewReport}>

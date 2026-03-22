@@ -1,0 +1,62 @@
+/* Toast Notification Styles */
+
+.sentinel-toast-container {
+  font-family: var(--font-mono);
+  z-index: 9999;
+}
+
+.sentinel-toast {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary) !important;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-normal);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.sentinel-toast-success {
+  border-left: 3px solid var(--color-success);
+}
+
+.sentinel-toast-error {
+  border-left: 3px solid var(--color-danger);
+}
+
+.sentinel-toast-warning {
+  border-left: 3px solid var(--color-warning);
+}
+
+.sentinel-toast-info {
+  border-left: 3px solid var(--color-primary);
+}
+
+.sentinel-toast-loading {
+  border-left: 3px solid var(--color-primary);
+}
+
+/* Progress bar */
+.Toastify__progress-bar {
+  background: var(--color-primary) !important;
+}
+
+.Toastify__progress-bar--success {
+  background: var(--color-success) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: var(--color-danger) !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: var(--color-warning) !important;
+}
+
+/* Close button */
+.Toastify__close-button {
+  color: var(--text-muted) !important;
+  opacity: 0.7;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}

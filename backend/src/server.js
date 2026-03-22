@@ -6,15 +6,27 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
 const apiRoutes = require('./routes/api');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { rateLimit } = require('./middleware/validator');
+const logger = require('./utils/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// Middleware
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for local development
+  crossOriginEmbedderPolicy: false
+}));
+
+// Compression middleware
+app.use(compression());
+
+// CORS middleware
 app.use(cors({
   origin: FRONTEND_URL,
   methods: ['GET', 'POST'],
@@ -24,9 +36,12 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Request logging
+// Request logging with Winston
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  logger.info(`${req.method} ${req.path}`, {
+    ip: req.ip,
+    userAgent: req.get('user-agent')
+  });
   next();
 });
 

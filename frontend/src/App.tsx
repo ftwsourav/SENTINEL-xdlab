@@ -1,11 +1,15 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ToastProvider } from './components/common/Toast';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { ReportInput } from './components/features/ReportInput';
 import { AssessmentOutput } from './components/features/AssessmentOutput';
 import { History } from './components/features/History';
 import { Settings } from './components/features/Settings';
+import { Trends } from './components/features/Trends';
 import './styles/variables.css';
 import './styles/reset.css';
 import './styles/print.css';
@@ -24,6 +28,10 @@ const AppContent: React.FC = () => {
     
     if (currentView === 'history') {
       return <History />;
+    }
+
+    if (currentView === 'trends') {
+      return <Trends />;
     }
     
     if (currentView === 'settings') {
@@ -48,8 +56,14 @@ const AppContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AppProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </AppProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };

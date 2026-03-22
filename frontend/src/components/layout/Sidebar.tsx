@@ -5,6 +5,7 @@ import './Sidebar.css';
 const NAV_ITEMS = [
   { id: 'analyze', label: 'ANALYZE' },
   { id: 'history', label: 'HISTORY' },
+  { id: 'trends', label: 'TRENDS' },
   { id: 'settings', label: 'SETTINGS' }
 ];
 

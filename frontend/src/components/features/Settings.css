@@ -93,6 +93,12 @@
   color: var(--accent-gold);
 }
 
+.data-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
 .about-section {
   display: flex;
   flex-direction: column;

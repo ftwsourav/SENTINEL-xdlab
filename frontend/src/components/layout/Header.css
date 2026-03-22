@@ -34,6 +34,25 @@
   gap: var(--space-6);
 }
 
+.header-theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.header-theme-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-gold);
+}
+
 .header-status {
   display: flex;
   align-items: center;
