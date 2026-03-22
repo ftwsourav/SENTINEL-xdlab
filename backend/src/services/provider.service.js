@@ -375,10 +375,10 @@ class ProviderService {
     }
 
     // Sarvam doesn't have a public models endpoint
-    // Return hardcoded models
+    // Return hardcoded models based on API documentation
     return {
       connected: true,
-      models: ['sarvam-2b', 'sarvam-m'],
+      models: ['sarvam-m', 'sarvam-30b', 'sarvam-30b-16k', 'sarvam-105b', 'sarvam-105b-32k'],
       responseTime: 0
     };
   }
@@ -399,7 +399,7 @@ class ProviderService {
     }
 
     if (provider === 'sarvam') {
-      return ['sarvam-2b', 'sarvam-m'];
+      return ['sarvam-m', 'sarvam-30b', 'sarvam-30b-16k', 'sarvam-105b', 'sarvam-105b-32k'];
     }
 
     // For local providers, fetch from API

@@ -28,7 +28,7 @@ const HARDCODED_MODELS: Record<string, string[]> = {
     'meta-llama/llama-3-8b-instruct',
     'google/gemma-7b-it'
   ],
-  sarvam: ['sarvam-2b', 'sarvam-m']
+  sarvam: ['sarvam-m', 'sarvam-30b', 'sarvam-30b-16k', 'sarvam-105b', 'sarvam-105b-32k']
 };
 
 export const Settings: React.FC = () => {
