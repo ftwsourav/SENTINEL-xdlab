@@ -1,0 +1,102 @@
+.report-input {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.report-input-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin-bottom: var(--space-8);
+}
+
+.report-input-error {
+  background: var(--danger);
+  border: var(--border-width) solid var(--danger);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-primary);
+}
+
+.error-icon {
+  font-size: var(--text-lg);
+}
+
+.report-input-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.form-textarea,
+.form-input,
+.form-select {
+  background: var(--bg-input);
+  border: var(--border-width) solid var(--border);
+  color: var(--text-primary);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-fast);
+}
+
+.form-textarea:focus,
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.form-textarea {
+  resize: vertical;
+  line-height: var(--leading-relaxed);
+}
+
+.form-textarea::placeholder,
+.form-input::placeholder {
+  color: var(--text-hint);
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.report-input-loading {
+  margin-top: var(--space-8);
+  padding: var(--space-8);
+  border: var(--border-width) solid var(--border);
+  display: flex;
+  justify-content: center;
+}

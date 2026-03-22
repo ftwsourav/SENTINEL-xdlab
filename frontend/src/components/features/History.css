@@ -1,0 +1,117 @@
+.history {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+}
+
+.history-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--accent-gold);
+  margin: 0;
+}
+
+.history-stats {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.history-count {
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.history-controls {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.history-search,
+.history-filter {
+  background: var(--bg-input);
+  border: var(--border-width) solid var(--border);
+  color: var(--text-primary);
+  padding: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.history-search {
+  flex: 1;
+}
+
+.history-search:focus,
+.history-filter:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.history-search::placeholder {
+  color: var(--text-hint);
+}
+
+.history-empty {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.history-card {
+  cursor: pointer;
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.history-card-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.history-card-timestamp {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.history-card-content {
+  margin-bottom: var(--space-3);
+}
+
+.history-card-summary {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+.history-card-meta {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}

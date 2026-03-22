@@ -1,0 +1,85 @@
+/**
+ * Print Stylesheet
+ * For PDF export and printing
+ */
+
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+    font-family: monospace;
+  }
+
+  .header,
+  .sidebar,
+  .assessment-actions,
+  .form-actions,
+  .history-controls,
+  button {
+    display: none !important;
+  }
+
+  .app-main {
+    padding: 20px;
+  }
+
+  .assessment-output,
+  .card {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  .assessment-title {
+    color: black !important;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .badge {
+    border: 2px solid black !important;
+    background: white !important;
+    color: black !important;
+    padding: 4px 12px;
+  }
+
+  .threat-bars {
+    display: none;
+  }
+
+  .card {
+    border: 1px solid black !important;
+    padding: 15px;
+  }
+
+  .card-title {
+    color: black !important;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .finding-item,
+  .recommendation-item,
+  .threat-card {
+    color: black !important;
+    margin-bottom: 8px;
+  }
+
+  .intelligence-tag {
+    border: 1px solid black !important;
+    background: white !important;
+    color: black !important;
+    padding: 2px 8px;
+    margin-right: 4px;
+  }
+
+  @page {
+    margin: 2cm;
+  }
+}

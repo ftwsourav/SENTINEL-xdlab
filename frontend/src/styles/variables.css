@@ -1,0 +1,100 @@
+/**
+ * SENTINEL Design System
+ * CSS Custom Properties - Dark Ops Aesthetic
+ */
+
+:root {
+  /* === BACKGROUNDS === */
+  --bg-primary: #0a0a0a;
+  --bg-surface: #0d0d0d;
+  --bg-card: #080808;
+  --bg-input: #0a0a0a;
+  --bg-hover: #121212;
+
+  /* === BORDERS === */
+  --border: #1e1e1e;
+  --border-subtle: #141414;
+  --border-active: #b8964a;
+
+  /* === TEXT === */
+  --text-primary: #e8e4d9;
+  --text-secondary: #a09a8a;
+  --text-muted: #555555;
+  --text-hint: #333333;
+
+  /* === SEMANTIC COLORS === */
+  --accent-gold: #b8964a;
+  --danger: #8b2a2a;
+  --success: #2a6a4a;
+  --warning: #8a7a3a;
+  --info: #3a5a7a;
+
+  /* === THREAT LEVELS === */
+  --threat-critical: #8b2a2a;
+  --threat-high: #a84a3a;
+  --threat-medium: #8a7a3a;
+  --threat-low: #3a5a7a;
+
+  /* === STATUS COLORS === */
+  --status-pending: #555555;
+  --status-processing: #b8964a;
+  --status-completed: #2a6a4a;
+  --status-error: #8b2a2a;
+
+  /* === TYPOGRAPHY === */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  --tracking-normal: 0;
+  --tracking-wide: 2px;
+  --tracking-wider: 3px;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-bold: 700;
+
+  /* === SPACING === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* === LAYOUT === */
+  --container-max: 1400px;
+  --sidebar-width: 240px;
+  --header-height: 64px;
+  --border-radius: 0;
+  --border-width: 1px;
+
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+
+  /* === Z-INDEX === */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+}
