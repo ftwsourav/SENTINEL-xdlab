@@ -6,7 +6,6 @@ import { ConfirmModal } from '../common/Modal';
 import { toast } from '../common/Toast';
 import exportService from '../../services/export.service';
 import dbService from '../../services/db.service';
-import apiService from '../../services/api.service';
 import './Settings.css';
 
 const PROVIDER_OPTIONS = [
@@ -16,7 +15,14 @@ const PROVIDER_OPTIONS = [
   { id: 'sarvam', name: 'SARVAM AI', subtitle: 'Cloud · Indian' }
 ];
 
-const HARDCODED_MODELS = {
+const DEFAULT_URLS: Record<string, string> = {
+  ollama: 'http://localhost:11434',
+  lmstudio: 'http://localhost:1234',
+  openrouter: 'https://openrouter.ai/api/v1',
+  sarvam: 'https://api.sarvam.ai'
+};
+
+const HARDCODED_MODELS: Record<string, string[]> = {
   openrouter: [
     'mistralai/mistral-7b-instruct',
     'meta-llama/llama-3-8b-instruct',
@@ -41,21 +47,33 @@ export const Settings: React.FC = () => {
   const [openrouterApiKey, setOpenrouterApiKey] = useState(settings.openrouterApiKey);
   const [sarvamApiKey, setSarvamApiKey] = useState(settings.sarvamApiKey);
   const [selectedModel, setSelectedModel] = useState(settings.defaultModel);
-  const [temperature, setTemperature] = useState(settings.temperature);
+  const [temperature, setTemperature] = useState(0.1); // Default to 0.1
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionResult, setConnectionResult] = useState<{ success: boolean; message: string; time?: number } | null>(null);
   const [showClearModal, setShowClearModal] = useState(false);
 
+  // Initialize state from settings
   useEffect(() => {
     setProvider(settings.provider);
-    setOllamaUrl(settings.ollamaUrl);
-    setLmstudioUrl(settings.lmstudioUrl);
-    setOpenrouterApiKey(settings.openrouterApiKey);
-    setSarvamApiKey(settings.sarvamApiKey);
-    setSelectedModel(settings.defaultModel);
-    setTemperature(settings.temperature);
+    
+    // Validate and fix URLs - never allow model names in URL fields
+    const validateUrl = (url: string, defaultUrl: string) => {
+      if (!url || !url.startsWith('http')) {
+        return defaultUrl;
+      }
+      return url;
+    };
+
+    setOllamaUrl(validateUrl(settings.ollamaUrl, DEFAULT_URLS.ollama));
+    setLmstudioUrl(validateUrl(settings.lmstudioUrl, DEFAULT_URLS.lmstudio));
+    setOpenrouterApiKey(settings.openrouterApiKey || '');
+    setSarvamApiKey(settings.sarvamApiKey || '');
+    
+    // Model is separate from URL
+    setSelectedModel(settings.defaultModel || 'phi3:mini');
+    setTemperature(settings.temperature || 0.1);
   }, [settings]);
 
   // Auto-fetch models when provider changes
@@ -90,12 +108,16 @@ export const Settings: React.FC = () => {
     setAvailableModels([]);
     
     try {
-      const providerConfig = {
-        provider,
-        url: provider === 'ollama' ? ollamaUrl : lmstudioUrl
-      };
+      const url = provider === 'ollama' ? ollamaUrl : lmstudioUrl;
+      
+      // Validate URL before fetching
+      if (!url.startsWith('http')) {
+        toast.error('Invalid URL - must start with http:// or https://');
+        setIsFetchingModels(false);
+        return;
+      }
 
-      const response = await fetch(`http://localhost:3001/api/models?provider=${provider}&url=${providerConfig.url}`);
+      const response = await fetch(`http://localhost:3001/api/models?provider=${provider}&url=${encodeURIComponent(url)}`);
       const data = await response.json();
 
       if (data.success && data.data.models && data.data.models.length > 0) {
@@ -125,12 +147,32 @@ export const Settings: React.FC = () => {
       const providerConfig: any = { provider };
 
       if (provider === 'ollama') {
+        if (!ollamaUrl.startsWith('http')) {
+          toast.error('Invalid Ollama URL');
+          setIsTestingConnection(false);
+          return;
+        }
         providerConfig.url = ollamaUrl;
       } else if (provider === 'lmstudio') {
+        if (!lmstudioUrl.startsWith('http')) {
+          toast.error('Invalid LM Studio URL');
+          setIsTestingConnection(false);
+          return;
+        }
         providerConfig.url = lmstudioUrl;
       } else if (provider === 'openrouter') {
+        if (!openrouterApiKey) {
+          toast.error('OpenRouter API key required');
+          setIsTestingConnection(false);
+          return;
+        }
         providerConfig.apiKey = openrouterApiKey;
       } else if (provider === 'sarvam') {
+        if (!sarvamApiKey) {
+          toast.error('Sarvam AI API key required');
+          setIsTestingConnection(false);
+          return;
+        }
         providerConfig.apiKey = sarvamApiKey;
       }
 
@@ -170,6 +212,16 @@ export const Settings: React.FC = () => {
   };
 
   const handleSave = async () => {
+    // Validate URLs before saving
+    if (provider === 'ollama' && !ollamaUrl.startsWith('http')) {
+      toast.error('Invalid URL — must start with http:// or https://');
+      return;
+    }
+    if (provider === 'lmstudio' && !lmstudioUrl.startsWith('http')) {
+      toast.error('Invalid URL — must start with http:// or https://');
+      return;
+    }
+
     await updateSettings({
       provider,
       ollamaUrl,
@@ -203,6 +255,10 @@ export const Settings: React.FC = () => {
 
   const needsApiKey = provider === 'openrouter' || provider === 'sarvam';
   const needsUrl = provider === 'ollama' || provider === 'lmstudio';
+  
+  const urlLabel = provider === 'ollama' ? 'OLLAMA URL' : 'LM STUDIO URL';
+  const currentUrl = provider === 'ollama' ? ollamaUrl : lmstudioUrl;
+  const setCurrentUrl = provider === 'ollama' ? setOllamaUrl : setLmstudioUrl;
 
   return (
     <div className="settings">
@@ -235,22 +291,24 @@ export const Settings: React.FC = () => {
             </div>
           </div>
 
-          {/* Context-sensitive fields */}
+          {/* URL Field for Local Providers */}
           {needsUrl && (
             <div className="form-group">
-              <label className="form-label">
-                {provider === 'ollama' ? 'OLLAMA URL' : 'LM STUDIO URL'}
-              </label>
+              <label className="form-label">{urlLabel}</label>
               <input
                 type="text"
                 className="form-input"
-                value={provider === 'ollama' ? ollamaUrl : lmstudioUrl}
-                onChange={(e) => provider === 'ollama' ? setOllamaUrl(e.target.value) : setLmstudioUrl(e.target.value)}
-                placeholder={provider === 'ollama' ? 'http://localhost:11434' : 'http://localhost:1234'}
+                value={currentUrl}
+                onChange={(e) => setCurrentUrl(e.target.value)}
+                placeholder={DEFAULT_URLS[provider]}
               />
+              <div className="form-hint">
+                Base URL for {provider === 'ollama' ? 'Ollama' : 'LM Studio'} API
+              </div>
             </div>
           )}
 
+          {/* API Key Field for Cloud Providers */}
           {needsApiKey && (
             <div className="form-group">
               <label className="form-label">
@@ -261,7 +319,7 @@ export const Settings: React.FC = () => {
                 className="form-input"
                 value={provider === 'openrouter' ? openrouterApiKey : sarvamApiKey}
                 onChange={(e) => provider === 'openrouter' ? setOpenrouterApiKey(e.target.value) : setSarvamApiKey(e.target.value)}
-                placeholder={provider === 'openrouter' ? 'sk-or-...' : 'sarvam-...'}
+                placeholder={provider === 'openrouter' ? 'sk-or-...' : 'sk_...'}
               />
               <div className="form-hint">
                 Get your API key from {provider === 'openrouter' ? 'openrouter.ai' : 'sarvam.ai'}
@@ -291,7 +349,7 @@ export const Settings: React.FC = () => {
             </div>
           </div>
 
-          {/* Model Selection */}
+          {/* Model Selection for Local Providers */}
           {needsUrl && (
             <div className="form-group">
               <div className="form-label-row">
@@ -326,6 +384,7 @@ export const Settings: React.FC = () => {
             </div>
           )}
 
+          {/* Model Selection for Cloud Providers */}
           {needsApiKey && (
             <div className="form-group">
               <label className="form-label">ACTIVE MODEL</label>
@@ -344,7 +403,7 @@ export const Settings: React.FC = () => {
             </div>
           )}
 
-          {/* Temperature */}
+          {/* Temperature Slider */}
           <div className="form-group">
             <label className="form-label">TEMPERATURE: {temperature.toFixed(1)}</label>
             <input
@@ -357,7 +416,7 @@ export const Settings: React.FC = () => {
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
             />
             <div className="form-hint">
-              Lower = more focused and consistent (recommended: 0.1-0.3)
+              Lower = more focused and consistent (recommended: 0.1-0.3 for structured output)
             </div>
           </div>
 
